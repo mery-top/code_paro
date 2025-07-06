@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-const maxThreads = 4
+const maxThreads = 6
 
 type DataSet struct {
 	SectionID int
