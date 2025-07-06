@@ -25,8 +25,8 @@ func SectionRead(parts []string, sectionID int, ch chan<- DataSet) {
 	var unique []int
 
 	for _, part := range parts {
-		tokens := strings.Fields(part)
-		for _, tok := range tokens {
+		partArr := strings.Fields(part)
+		for _, tok := range partArr {
 			if num, err := strconv.Atoi(tok); err == nil {
 				if !seen[num] {
 					seen[num] = true
