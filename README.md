@@ -1,4 +1,4 @@
-## 🟩 1. Go Program: Unique Numbers from File
+## 🟩 1. Go Program: MultiThread Unique Numbers from File
 
 **📝 File:** `q1.go`
 
