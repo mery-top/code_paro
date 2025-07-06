@@ -2,7 +2,7 @@ CC = gcc
 SRC = q2/main.c \
 q2/lru.c
 
-OUT = q2
+OUT = out
 
 $(OUT): $(SRC)
 		$(CC) $(SRC) -o $(OUT)

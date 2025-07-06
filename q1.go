@@ -1,5 +1,15 @@
 package main
+/*
+-------------------------------
+RUN:
+go run q1.go
+from the root
 
+OUTPUT:
+Unique numbers in file order:
+11 12 13 14 15 16 17 18 19 20 21 22 
+------------------------------
+*/
 import (
 	"bufio"
 	"fmt"

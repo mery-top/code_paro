@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 
 typedef struct LRUNode{
-    char* path[100];
+    char path[100];
     time_t opened_at;
     off_t size;
     ino_t inode;

@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include "lru.h"
 #include <string.h>
+#include <fcntl.h>
+#include <time.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
 
 LRUNode* head = NULL;
 int max_size =0;
@@ -17,6 +22,10 @@ int search_lru_node(char* filepath){
     LRUNode* curr = head;
     while(curr){
         if(strcmp(filepath, curr->path)== 0){
+            printf("File found!\n");
+            printf("Details\n");
+            printf("%s -> Size %lld | Inode %llu | Time: %s\n", curr->path, curr->size, curr->inode, ctime(&curr->opened_at));
+            
             return 1;
         }
 
@@ -41,7 +50,9 @@ void delete_lru_node(){
         curr = curr->next;
     }
 
+    printf("LRU File deleted: %s\n",curr->path);
     prev->next = NULL;
+    
     free(curr);
     curr_size--;
 }
@@ -86,7 +97,7 @@ void print_lru_node() {
     LRUNode *curr = head;
     printf("LRU Cache (Most → Least Used): ");
     while (curr) {
-        printf("%s -> Size %ld | Inode %ld | Time: %s\n", curr->path, curr->size, curr->inode, ctime(curr->opened_at));
+        printf("%s -> Size %lld | Inode %llu | Time: %s\n", curr->path, curr->size, curr->inode, ctime(&curr->opened_at));
         curr = curr->next;
     }
     printf("NULL\n");
