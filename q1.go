@@ -1,4 +1,4 @@
-package code
+package main
 
 import (
 	"bufio"
@@ -18,14 +18,14 @@ type DataSet struct {
 
 var wg sync.WaitGroup
 
-func SectionRead(lines []string, sectionID int, ch chan<- DataSet) {
+func SectionRead(parts []string, sectionID int, ch chan<- DataSet) {
 	defer wg.Done()
 
 	seen := make(map[int]bool)
 	var unique []int
 
-	for _, line := range lines {
-		tokens := strings.Fields(line)
+	for _, part := range parts {
+		tokens := strings.Fields(part)
 		for _, tok := range tokens {
 			if num, err := strconv.Atoi(tok); err == nil {
 				if !seen[num] {
@@ -39,7 +39,7 @@ func SectionRead(lines []string, sectionID int, ch chan<- DataSet) {
 	ch <- DataSet{SectionID: sectionID, Numbers: unique}
 }
 
-func Q1() {
+func main() {
 	file, err := os.Open("number.txt")
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -47,25 +47,25 @@ func Q1() {
 	}
 	defer file.Close()
 
-	var lines []string
+	var parts []string
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+		parts = append(parts, scanner.Text())
 	}
 
-	totalLines := len(lines)
-	SectionSize := (totalLines) / maxThreads
+	partTotal := len(parts)
+	SectionSize := (partTotal) / maxThreads
 
 	ch := make(chan DataSet, maxThreads)
 
 	for i := 0; i < maxThreads; i++ {
 		start := i * SectionSize
 		end := start + SectionSize
-		if end > totalLines {
-			end = totalLines
+		if end > partTotal {
+			end = partTotal
 		}
 		wg.Add(1)
-		go SectionRead(lines[start:end], i, ch)
+		go SectionRead(parts[start:end], i, ch)
 	}
 
 	go func() {
