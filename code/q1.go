@@ -2,109 +2,91 @@ package code
 
 import (
 	"bufio"
-	"bytes"
-	"code_paro/models"
 	"fmt"
-	"io"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
 )
 
-const maxThreads = 4;
-var wg sync.WaitGroup
+const maxThreads = 4
 
-
-func readSection(filename string, start int64, end int64, ch chan<-models.DataSet, sectionId int){
-	defer wg.Done()
-
-	file, err:= os.Open(filename)
-	if err!=nil{
-		log.Fatal(err)
-	}
-
-	defer file.Close()
-
-	file.Seek(start,0)
-	reader:= bufio.NewReader(file)
-	var buffer bytes.Buffer
-	var bytesRead int64 = 0
-
-	for{
-		byte, err := reader.ReadByte()
-		if err!=nil{
-			if err == io.EOF{
-				break
-			}
-			fmt.Println("Read error",err)
-			return
-		}
-
-		bytesRead++
-		buffer.WriteByte(byte)
-
-		if start+bytesRead > end && (byte == ' ' || byte == '\n') {
-			break
-		}
-
-	}
-
-	byteArr:= strings.Fields(buffer.String())
-	localArr:= make(map[int]bool)
-
-	for _, b:= range byteArr{
-		if num, err:= strconv.Atoi(b); err == nil{
-			localArr[num] = true;
-		}
-	}
-
-	ch <- models.DataSet{Data: localArr, SectionID: sectionId}
-	
+type DataSet struct {
+	SectionID int
+	Numbers   []int
 }
 
+var wg sync.WaitGroup
 
-func callThreads(){
-	filename:= "number.txt"
-	file, err:= os.Open(filename)
-	if err!=nil{
-		log.Fatal(err)
+func SectionRead(lines []string, sectionID int, ch chan<- DataSet) {
+	defer wg.Done()
+
+	seen := make(map[int]bool)
+	var unique []int
+
+	for _, line := range lines {
+		tokens := strings.Fields(line)
+		for _, tok := range tokens {
+			if num, err := strconv.Atoi(tok); err == nil {
+				if !seen[num] {
+					seen[num] = true
+					unique = append(unique, num)
+				}
+			}
+		}
 	}
 
+	ch <- DataSet{SectionID: sectionID, Numbers: unique}
+}
+
+func Q1() {
+	file, err := os.Open("number.txt")
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
 	defer file.Close()
 
-	fileStat, err:= file.Stat()
-	if err!=nil{
-		log.Fatal(err)
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
 	}
 
-	//divide sections
-	fileSize:= fileStat.Size()
-	sections:= fileSize/ int64(maxThreads)
+	totalLines := len(lines)
+	SectionSize := (totalLines) / maxThreads
 
-	ch:= make(chan models.DataSet, maxThreads)
+	ch := make(chan DataSet, maxThreads)
 
-	for i:=0; i<maxThreads; i++{
-		start:= int64(i) * sections
-		end:= start + sections
+	for i := 0; i < maxThreads; i++ {
+		start := i * SectionSize
+		end := start + SectionSize
+		if end > totalLines {
+			end = totalLines
+		}
 		wg.Add(1)
-		go readSection(filename, start, end, ch, i)
-
+		go SectionRead(lines[start:end], i, ch)
 	}
 
-	go func(){
+	go func() {
 		wg.Wait()
 		close(ch)
 	}()
 
-	results:= make([]models.DataSet, maxThreads)
-	for data := range ch{
-		results[data.SectionID] = data;
+	results := make([]DataSet, maxThreads)
+	for data := range ch {
+		results[data.SectionID] = data
 	}
-}
 
-func Q1(){
-	
-
+	seenGlobal := make(map[int]bool)
+	fmt.Println("Unique numbers in file order:")
+	for _, ds := range results {
+		for _, num := range ds.Numbers {
+			if !seenGlobal[num] {
+				seenGlobal[num] = true
+				fmt.Print(num, " ")
+			}
+		}
+	}
+	fmt.Println()
 }
